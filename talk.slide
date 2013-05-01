@@ -1,0 +1,290 @@
+Whispering Gophers
+Network programming in Go
+
+Andrew Gerrand
+Francesc Campoy
+
+* Introduction
+
+This code lab demonstrates network programming with Go.
+
+The final goal is to build a "whispernet": a peer to peer mesh network for transmitting text messages.
+
+The codelab comprises five exercises of increasing complexity.
+
+This is not an introducion to the Go Programming Language; some experience writing Go code is required.
+
+* Vital resources
+
+Visit
+
+.link http://code.google.com/p/whispering-gophers
+
+for code samples and links to these slides.
+
+Then install the utility library:
+
+	go get code.google.com/p/whispering-gophers/util
+
+
+* Exercise 1: Reading and encoding messages
+
+.image talk/img/ex1.png
+
+Write a program that
+
+- reads lines from standard input (`os.Stdin`)
+- encodes each line as a JSON object, written to standard output (`os.Stdout`)
+
+This line of input:
+
+	Hello, world
+
+should produce this output:
+
+	{"Body":"Hello, world"}
+
+This is our system's basic message format.
+
+* Readers and Writers
+
+The `io` package provides fundamental I/O interfaces that are used throughout most Go code.
+
+The most ubiquitous are the `Reader` and `Writer` types, which describe streams of data.
+
+.code talk/code/io/io.go
+
+`Reader` and `Writer` implementations include files, sockets, (de)compressors, image and JSON codecs, and many more.
+
+* Chaining Readers
+
+.play talk/code/reader.go
+
+* Buffered I/O
+
+The `bufio` package implements buffered I/O. Its `bufio.Reader` and `bufio.Writer` types wrap `io.Reader` and `io.Writer`, providing buffering and also some help for textual I/O.
+
+.play talk/code/bufio.go /const/,$
+
+# TODO(adg): use Scanner once Go 1.1 is out
+
+* Encoding JSON objects
+
+The `encoding/json` package converts JSON-encoded data to and from native Go data structures.
+
+.play talk/code/json-encode.go /type/,$
+
+* Error checking
+
+Many functions in Go return an `error` value.
+These values are your friends; they will tell you where you went wrong.
+Ignore them at your peril!
+
+Use [[http://golang.org/pkg/log/#Println][`log.Println`]] to print log messages, and [[http://golang.org/pkg/log/#Fatal][`log.Fatal`]] to print a message and exit the program printing a stack trace.
+
+.play talk/code/log.go /func main/,$
+
+* Exercise 1: Reading and encoding messages (recap)
+
+Write a program that
+
+- reads lines from standard input (`os.Stdin`)
+- encode each line as a JSON object, written to standard output (`os.Stdout`)
+
+This line of input:
+
+	Hello, world
+
+should produce this output:
+
+	{"Body":"Hello, world"}
+
+See:
+
+- [[http://golang.org/pkg/bufio/#Reader][`bufio.Reader`]] (use `ReadString`, *not* `ReadLine`)
+- [[http://golang.org/pkg/encoding/json/#Encoder][`encoding/json.Encoder`]]
+
+# TOOD(adg): switch to bufio.Scanner post go1.1
+
+
+* Exercise 2: Send messages to a peer
+
+Extend your program:
+
+- make a TCP connection to a remote host
+- write the JSON-encoded messages to the connnection instead of standard output
+
+.image talk/img/ex2.png 300 800
+
+* Making a network connection
+
+The `net` package provides talk/code for network operations.
+
+The [[http://golang.org/pkg/net/#Dial][`net.Dial`]] function opens a nework connection and returns a [[http://golang.org/pkg/net/#Conn][`net.Conn`]], which implements `io.Reader`, `io.Writer`, and `io.Closer` (or `io.ReadWriteCloser`).
+
+.play talk/code/dial.go /func main/,$
+
+(Usually you would use the `net/http` package to make an HTTP request; the purpose of this example is to demonstrate the lower-level `net` package.)
+
+* Exercise 2: Send messages to a peer (recap)
+
+Extend your program:
+
+- make a TCP connection to a remote host
+- write the JSON-encoded messages to the connnection instead of standard output
+
+See:
+
+- [[http://golang.org/pkg/net/#Dial][`net.Dial`]]
+
+Your instructor will specify the address of the remote host, and show a log of received messages on screen to aid in debugging.
+
+# Instructor:
+#  $ master -poll=false
+#  $ peer -v -master=localhost:8000
+# And display the IP address, port, and output of the peer on screen.
+
+
+* Exercise 3: Accept peer connections
+
+- register the listener address with the master server,
+- listen on a TCP port,
+- accept incoming connections and launch a goroutine to handle each one,
+- decode JSON messages from the incoming connections, and
+- print each message `Body` to standard output.
+
+.image talk/img/ex3.png
+
+* Listening, accepting, and serving (1/2)
+
+The [[http://golang.org/pkg/net/#Listen][`net.Listen`]] function binds to a socket and returns a [[http://golang.org/pkg/net/#Listener][`net.Listener`]].
+The [[http://golang.org/pkg/net/#Listener][`net.Listener`]] provides an `Accept` method that blocks until a client connects to the socket, and then returns a [[http://golang.org/pkg/net/#Conn][`net.Conn`]].
+
+This server reads data from a connection and echoes it back:
+
+.play talk/code/listen-single.go /func main/,$
+
+* Goroutines
+
+Goroutines are lightweight threads that are managed by the Go runtime. To run a function in a new goroutine, just put `"go"` before the function call.
+
+.play talk/code/goroutines.go
+
+* Listening, accepting, and serving (2/2)
+
+To handle requests concurrently, serve each connection in its own goroutine:
+
+.play talk/code/listen.go /func main/,$
+
+* Obtaining the listener address (1/2)
+
+The `net.Listener` interface provides an `Addr` method that returns a `net.Addr`. 
+
+.play talk/code/listen-addr.go /import/,$
+
+When listening on all interfaces, as specified by the empty hostname in the string `":4000"` above, the `net.Addr` won't be that of our public IP address.
+
+To complete our program, we need to find that IP.
+
+* Obtaining the listener address (2/2)
+
+The [[http://godoc.org/code.google.com/a/whisper/][`"code.google.com/a/whisper"`]] package provides a `Listen` function that binds to a random port on the first available public interface.
+
+.play talk/code/listen-addr-util.go /import/,$
+
+* Register with the master
+
+Once your program is listening on an address, you must tell someone about it.
+The [[http://godoc.org/code.google.com/a/whisper/][`"code.google.com/a/whisper"`]] package provides a `RegisterPeer` function, which takes an address string and notifies a master server (specified by the `-master` command-line flag) that there is a peer available at that address.
+
+.play talk/code/register.go /^func main/,$
+
+* Decoding JSON objects
+
+Decoding JSON from an `io.Reader` is just like writing them to an `io.Writer`, but in reverse.
+
+.play talk/code/json-decode.go /type/,$
+
+* Exercise 3: Accept peer connections (recap)
+
+Extend your program:
+
+- listen on a TCP port,
+- register the listener address with the master server,
+- accept incoming connections and launch a goroutine to handle each one,
+- decode JSON messages from the incoming connections, and
+- print each message `Body` to standard output.
+
+Hints:
+
+- import [[http://godoc.org/code.google.com/a/whisper/util][`"code.google.com/a/whisper/util"`]] and use its `Listen` and `RegisterPeer` functions
+- read about [[http://golang.org/pkg/net/#Listener][`net.Listener`]], and get the listen address using its `Addr` method
+- [[http://golang.org/pkg/encoding/json/#Decoder][`encoding/json.Decoder`]] and the `fmt` package
+
+# me: master that sends funny messages to the client
+
+
+* Exercise 4: Sending and receiving
+
+Combining the code from the two previous exercises:
+
+- notify the master server your listener address,
+- receive messages and store the addresses as peers,
+- send messages entered at standard input to all connected peers.
+
+.image talk/img/ex4.png
+
+* Channels
+
+Goroutines communicate via channels. A channel is a typed conduit that may be synchronous (unbuffered) or asynchronous (buffered).
+
+.play talk/code/chan.go
+
+* Distributing messages
+
+.play talk/code/fanout.go /func/,$
+
+* Protecting shared state
+
+Mutexes are a simple means to protect shared state from concurrent access.
+
+.play talk/code/lock.go /START/,/END/
+
+* Exercise 4: Broadcast messages to many peers (recap)
+
+Extend your program:
+
+- fetch a list of peers from the master,
+- connect to each of the peers simultaneously, and
+- send messages entered at standard input to all connected peers.
+
+Hints:
+
+- [[http://godoc.org/code.google.com/a/whisper/#ListPeers][`util.ListPeers`]]
+- separate the input handling from the message encoding
+- each peer should have a goroutine that receives messages from a channel and sends them to the peer as JSON objects
+- use a global map of type `map[string]chan`Message` to track connected peers
+
+
+* Exercise 5: Re-broadcast received messages
+
+Extend your program:
+
+- add `ID` and `TTL` fields to the message object,
+- send new messages with a random ID and a fixed Time To Live (eg, 5),
+- re-send any received messages to all connected peers,
+- record the ID of each incoming message,
+- don't re-send messages you have already seen.
+
+The new message format:
+
+	{"Body": "Hello, world", "TTL": 5, "ID": "c8e2f561"}
+
+Hints:
+
+- use [[http://godoc.org/code.google.com/a/whisper/#RandomID][`util.RandomID`]] to generate random IDs
+- use a global map of type `map[string]bool` to track seen message IDs
+
+* Exercise 5
+
+.image talk/img/ex5.png
