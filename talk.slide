@@ -240,7 +240,7 @@ After listening, announce yourself to the master peer:
 
 	{"Addr": "192.168.20.50:23451"}
 
-Hints:
+* Exercise 3: Hints
 
 - import [[http://godoc.org/code.google.com/p/whispering-gophers/util][`"code.google.com/p/whispering-gophers/util"`]] and use its `Listen` and `RegisterPeer` functions
 - read about [[http://golang.org/pkg/net/#Listener][`net.Listener`]], and get the listen address using its `Addr` method
@@ -258,7 +258,6 @@ Combining the code from the two previous exercises:
 - send messages entered at standard input to all connected peers.
 
 .image talk/img/ex4.png
-
 
 * Channels
 
@@ -293,8 +292,6 @@ Hints:
 - each peer should have a goroutine that receives messages from a channel and sends them to the peer as JSON objects
 - use a global map of type `map[string]chan`Message` to track connected peers
 
-.image talk/img/ex4.png
-
 
 * Exercise 5: Re-broadcast received messages
 
@@ -314,3 +311,7 @@ Hints:
 
 - use [[http://godoc.org/code.google.com/p/whispering-gophers/util/#RandomID][`util.RandomID`]] to generate random IDs
 - use a global map of type `map[string]bool` to track seen message IDs
+
+* Exercise 5: diagram
+
+.image talk/img/ex4.png
