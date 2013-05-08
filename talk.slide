@@ -31,6 +31,22 @@ Then install the utility library:
 
 (You must have [[http://mercurial.selenic.com/][Mercurial]] installed for "go get" to work.)
 
+# TODO: Add slide with pre-reqs
+
+* Creating a workspace
+
+To write Go code you need a workspace.
+Create one now if you have not already.
+
+	$ mkdir $HOME/gocode
+	$ export GOPATH=$HOME/gocode   # or add this to ~/.profile
+	$ go get code.google.com/p/whispering-gophers/util
+
+This should install the `util` package to
+
+	$HOME/gocode/src/code.google.com/p/whispering-gophers/util
+
+(Check that it worked!)
 
 * Exercise 1: Reading and encoding messages
 
@@ -82,6 +98,19 @@ The `bufio` package implements buffered I/O. Its `bufio.Reader` and `bufio.Write
 The `encoding/json` package converts JSON-encoded data to and from native Go data structures.
 
 .play talk/code/json-encode.go /type/,$
+
+
+* A message type
+
+Our messages are sent as JSON objects like this:
+
+	{"Body":"This is a message!"} 
+
+Which corresponds to a Go data structure like this:
+
+	type Message struct {
+		Body string
+	}
 
 
 * Error checking
@@ -298,7 +327,7 @@ Hints:
 Extend your program:
 
 - add `ID` and `TTL` fields to the message object,
-- send new messages with a random ID and a fixed Time To Live (eg, 5),
+- send new messages with a random ID and a fixed Time To Live (e.g. 5),
 - re-send any received messages to all connected peers,
 - record the ID of each incoming message,
 - don't re-send messages you have already seen.
