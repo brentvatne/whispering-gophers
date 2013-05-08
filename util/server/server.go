@@ -1,14 +1,15 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
-
-	"code.google.com/p/whispering-gophers/util"
 )
+
+var addr = flag.String("addr", "localhost:8000", "server listen address")
 
 type dumpWriter struct {
 	c net.Conn
@@ -21,7 +22,8 @@ func (w dumpWriter) Write(v []byte) (int, error) {
 }
 
 func main() {
-	l, err := util.Listen()
+	flag.Parse()
+	l, err := net.Listen("tcp", *addr)
 	if err != nil {
 		log.Fatal(err)
 	}
