@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"sync"
 	"time"
 
 	"code.google.com/p/whispering-gophers/util"
@@ -37,6 +36,8 @@ func main() {
 
 	go listen(l)
 	go announce()
+	go seenMonitor()
+	go peersMonitor()
 
 	r := bufio.NewReader(os.Stdin)
 	for {
@@ -64,70 +65,109 @@ type Message struct {
 	TTL  int    // Remaining TTL
 }
 
-// Map of seen message IDs with a Mutex for safe concurrent access.
-var seenIDs = struct {
-	m map[string]bool
-	sync.Mutex
-}{m: make(map[string]bool)}
+// seenRequest is a request to the seen monitor to mark an id as seen and
+// return a boolean indicating whether the id had been seen before in the
+// passed channel result.
+type seenRequest struct {
+	id     string
+	result chan bool
+}
+
+var seenChan = make(chan seenRequest)
+
+// seenMonitor reads and processes seenRequests from the seenChan channel.
+func seenMonitor() {
+	seenIDs := make(map[string]bool)
+	for req := range seenChan {
+		old := seenIDs[req.id]
+		seenIDs[req.id] = true
+		req.result <- old
+	}
+}
 
 // seen marks an message id as seen, and returns true if it had been seen before.
 func seen(id string) bool {
 	if !*checkSeen {
 		return false
 	}
-	seenIDs.Lock()
-	old := seenIDs.m[id]
-	seenIDs.m[id] = true
-	seenIDs.Unlock()
-	return old
+	r := make(chan bool)
+	seenChan <- seenRequest{id, r}
+	return <-r
 }
 
-var peers = Peers{m: make(map[string]chan<- Message)}
+// List returns a slice of the channels in the peer list.
+func ListPeers() []chan<- Message {
+	res := make(chan []chan<- Message)
+	peers <- listPeersReq{res}
+	return <-res
+}
 
-type Peers struct {
-	mu sync.RWMutex
-	m  map[string]chan<- Message
+// listPeersReq is a request to send a slice containing the list of peers into
+// the passed channel result.
+type listPeersReq struct {
+	result chan []chan<- Message
 }
 
 // Add creates and returns a new channel that is also added to the peer
 // list if the given address wasn't already in the peer list.
 // If it was, no channel is created and Add returns nil.
-func (p Peers) Add(addr string) <-chan Message {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if _, ok := p.m[addr]; ok {
-		return nil
-	}
-	ch := make(chan Message)
-	p.m[addr] = ch
-	return ch
+func AddPeer(addr string) <-chan Message {
+	res := make(chan chan Message)
+	peers <- addPeerReq{addr, res}
+	return <-res
+}
+
+// addPeerReq is a request to create a new channel for a peer given its address
+// if it wasn't already in the peer list.
+// The new channel is returned in the given channel result.
+type addPeerReq struct {
+	addr   string
+	result chan chan Message
 }
 
 // Remove removes a peer from the peer list given its address.
-func (p Peers) Remove(addr string) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	delete(p.m, addr)
+func RemovePeer(addr string) {
+	peers <- rmPeerReq{addr}
 }
 
-// List returns a slice of the channels in the peer list.
-func (p Peers) List() []chan<- Message {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-	s := make([]chan<- Message, 0, len(p.m))
-	for _, ch := range p.m {
-		s = append(s, ch)
+// rmPeerReq is the request to remove a peer from the peer list.
+type rmPeerReq struct {
+	addr string
+}
+
+var peers = make(chan interface{})
+
+func peersMonitor() {
+	peersList := make(map[string]chan<- Message)
+	for req := range peers {
+		switch req := req.(type) {
+		case listPeersReq:
+			l := make([]chan<- Message, 0, len(peers))
+			for _, p := range peersList {
+				l = append(l, p)
+			}
+			req.result <- l
+		case addPeerReq:
+			if _, ok := peersList[req.addr]; ok {
+				close(req.result)
+				break
+			}
+			ch := make(chan Message)
+			peersList[req.addr] = ch
+			req.result <- ch
+		case rmPeerReq:
+			delete(peersList, req.addr)
+		}
 	}
-	return s
 }
 
 // connectToPeer handles the connection with a peer
 func connectToPeer(addr string) {
-	ch := peers.Add(addr)
+	ch := AddPeer(addr)
 	if ch == nil {
 		return // addr already handled by another goroutine
 	}
-	defer peers.Remove(addr)
+	defer RemovePeer(addr)
 
 	// Connect to peer
 	c, err := net.Dial("tcp", addr)
@@ -163,7 +203,7 @@ func send(m Message) {
 	if m.Addr == "" {
 		m.Addr = listenAddr
 	}
-	for _, peer := range peers.List() {
+	for _, peer := range ListPeers() {
 		select {
 		case peer <- m:
 		default:
@@ -211,10 +251,6 @@ func processMsg(msg Message) {
 	if len(msg.Body) > 0 {
 		log.Println(msg.Body)
 	}
-	if msg.Addr == listenAddr {
-		return
-	}
-
 	go connectToPeer(msg.Addr)
 
 	if *defaultTTL > 0 {

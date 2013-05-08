@@ -108,8 +108,8 @@ func connectToPeer(addr string) {
 
 // send sends a message to all the peers in the peer list.
 func send(msg, addr string) {
-	peers.RLock()
 	m := Message{Body: msg, Addr: addr}
+	peers.RLock()
 	for _, peer := range peers.m {
 		go func(p chan<- Message) { p <- m }(peer)
 	}

@@ -1,15 +1,14 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
-)
 
-var address = flag.String("addr", "", "address to listen")
+	"code.google.com/p/whispering-gophers/util"
+)
 
 type dumpWriter struct {
 	c net.Conn
@@ -17,21 +16,16 @@ type dumpWriter struct {
 }
 
 func (w dumpWriter) Write(v []byte) (int, error) {
-	fmt.Fprintf(w.w, "[%v->%v]", w.c.RemoteAddr(), w.c.LocalAddr())
+	fmt.Fprintf(w.w, "[%v->%v] ", w.c.RemoteAddr(), w.c.LocalAddr())
 	return w.w.Write(v)
 }
 
 func main() {
-	flag.Parse()
-	if *address == "" {
-		log.Println("Missing value for -addr")
-		flag.Usage()
-		return
-	}
-	l, err := net.Listen("tcp", *address)
+	l, err := util.Listen()
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Listening on", l.Addr())
 	for {
 		c, err := l.Accept()
 		if err != nil {

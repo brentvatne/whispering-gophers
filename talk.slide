@@ -213,7 +213,7 @@ To complete our program, we need to find that IP.
 
 * Obtaining the listener address (2/2)
 
-The [[http://godoc.org/code.google.com/a/whisper/][`"code.google.com/a/whisper"`]] package provides a `Listen` function that binds to a random port on the first available public interface.
+The [[http://godoc.org/code.google.com/p/whispering-gophers/util][`"code.google.com/p/whispering-gophers/util"`]] package provides a `Listen` function that binds to a random port on the first available public interface.
 
 .play talk/code/listen-addr-util.go /import/,$
 
@@ -242,7 +242,7 @@ After listening, announce yourself to the master peer:
 
 Hints:
 
-- import [[http://godoc.org/code.google.com/a/whisper/util][`"code.google.com/a/whisper/util"`]] and use its `Listen` and `RegisterPeer` functions
+- import [[http://godoc.org/code.google.com/p/whispering-gophers/util][`"code.google.com/p/whispering-gophers/util"`]] and use its `Listen` and `RegisterPeer` functions
 - read about [[http://golang.org/pkg/net/#Listener][`net.Listener`]], and get the listen address using its `Addr` method
 - [[http://golang.org/pkg/encoding/json/#Decoder][`encoding/json.Decoder`]] and the `fmt` package
 
@@ -312,5 +312,5 @@ The new message format:
 
 Hints:
 
-- use [[http://godoc.org/code.google.com/a/whisper/#RandomID][`util.RandomID`]] to generate random IDs
+- use [[http://godoc.org/code.google.com/p/whispering-gophers/util/#RandomID][`util.RandomID`]] to generate random IDs
 - use a global map of type `map[string]bool` to track seen message IDs
