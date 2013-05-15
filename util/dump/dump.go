@@ -1,3 +1,5 @@
+// This program listens to the host and port specified by the -listen flag and
+// dumps any incoming data to standard output.
 package main
 
 import (
@@ -9,7 +11,7 @@ import (
 	"os"
 )
 
-var addr = flag.String("addr", "localhost:8000", "server listen address")
+var addr = flag.String("listen", "localhost:8000", "server listen address")
 
 type dumpWriter struct {
 	c net.Conn
