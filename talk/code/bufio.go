@@ -13,13 +13,11 @@ Well-formed syllables
 `
 
 func main() {
-	r := bufio.NewReader(strings.NewReader(input))
-	for i := 0; ; i++ {
-		s, err := r.ReadString('\n')
-		if err != nil {
-			log.Println(err)
-			break
-		}
-		fmt.Printf("%v: %q\n", i, s)
+	s := bufio.NewScanner(strings.NewReader(input))
+	for s.Scan() {
+		fmt.Println(s.Text())
+	}
+	if err := s.Err(); err != nil {
+		log.Fatal(err)
 	}
 }

@@ -65,6 +65,8 @@ type Peers struct {
 	mu sync.RWMutex
 }
 
+// Add creates and returns a new channel for the given peer address.
+// If an address already exists in the registry, it returns nil.
 func (p *Peers) Add(addr string) <-chan Message {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -76,12 +78,14 @@ func (p *Peers) Add(addr string) <-chan Message {
 	return ch
 }
 
+// Remove deletes the specified peer from the registry.
 func (p *Peers) Remove(addr string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	delete(p.m, addr)
 }
 
+// List returns a slice of all active peer channels.
 func (p *Peers) List() []chan<- Message {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -167,6 +171,8 @@ func dial(addr string) {
 
 // TODO: Create a new map of seen message IDs and a mutex to protect it.
 
+// Seen returns true if the specified id has been seen before.
+// If not, it returns false and marks the given id as "seen".
 func Seen(id string) bool {
 	// TODO: Get a write lock on the seen message IDs map and unlock it at before returning.
 	// TODO: Check if the id has been seen before and return that later.
