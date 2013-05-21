@@ -74,21 +74,5 @@ func serve(c net.Conn) {
 }
 
 func dial(addr string) {
-	c, err := net.Dial("tcp", addr)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	s := bufio.NewScanner(os.Stdin)
-	e := json.NewEncoder(c)
-	for s.Scan() {
-		m := Message{Body: s.Text()}
-		err := e.Encode(m)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	if err := s.Err(); err != nil {
-		log.Fatal(err)
-	}
+	// TODO: put the contents of the main function from part 2 here.
 }
