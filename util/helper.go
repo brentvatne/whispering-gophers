@@ -16,7 +16,6 @@ func Listen() (net.Listener, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not find active non-loopback address: %v", err)
 	}
-	// Why the ":0"?
 	return net.Listen("tcp4", ip+":0")
 }
 
@@ -37,12 +36,14 @@ func externalIP() (string, error) {
 			return "", err
 		}
 		for _, addr := range addrs {
-			ipnet, ok := addr.(*net.IPNet)
-			if !ok {
-				continue
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
 			}
-			ip := ipnet.IP
-			if ip.IsLoopback() {
+			if ip == nil || ip.IsLoopback() {
 				continue
 			}
 			ip = ip.To4()
