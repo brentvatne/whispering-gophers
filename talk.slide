@@ -25,13 +25,17 @@ You must have these tools installed and working:
 - Go 1.1 (see [[http://golang.org/doc/install]])
 - Mercurial (see [[http://mercurial.selenic.com]])
 
-This is not an introducion to the Go Programming Language;
-*some*experience*writing*Go*code*is*required*.
-
-To learn Go:
+This is not an introduction to the Go Programming Language;
+*some*experience*writing*Go*code*is*required*. To learn Go:
 
 - Take [[http://tour.golang.org][A Tour of Go]]
 - Check out the [[http://golang.org/doc][Go documentation]]
+
+Create a workspace (see [[http://golang.org/doc/code.html]]) and install the support libraries:
+
+	$ go get code.google.com/p/whispering-gophers/hello
+	$ $GOPATH/bin/hello
+	It works!
 
 
 * Creating a workspace
@@ -113,7 +117,7 @@ The most ubiquitous are the `Reader` and `Writer` types, which describe streams 
 
 * Buffered I/O
 
-The `bufio` package implements buffered I/O. Its `bufio.Scanner` type wraps an `io.Reader` and provides a means to consume it by line (or using a specified "split funcion").
+The `bufio` package implements buffered I/O. Its `bufio.Scanner` type wraps an `io.Reader` and provides a means to consume it by line (or using a specified "split function").
 
 .play talk/code/bufio.go /const/,$
 
@@ -269,6 +273,7 @@ Write a new program:
 * Part 4: Listening and dialing
 
 - Combine parts 2 to part 3 (Listen _and_ Dial)
+- Modify the dialling code to use `log.Print` and `return` instead of `log.Fatal`
 - Test by connecting two instances
 
 .image talk/img/diag-part4.png
@@ -446,7 +451,7 @@ To put an id in the map:
 
 	seen[id] = true
 
-You should implement a function named `Seen`—make sure it is thread safe!
+You should implement a function named `Seen` — make sure it is thread safe!
 
 	// Seen returns true if the specified id has been seen before.
 	// If not, it returns false and marks the given id as "seen".
