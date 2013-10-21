@@ -190,8 +190,7 @@ func (l *Listener) loop() {
 		select {
 		case ch := <-l.accept:
 			if acpt != nil {
-				ch <- nil
-				break
+				acpt <- nil
 			}
 			acpt = ch
 			if len(dial) > 0 {
@@ -202,6 +201,7 @@ func (l *Listener) loop() {
 		case c := <-l.dial:
 			if acpt != nil {
 				acpt <- c
+				acpt = nil
 			} else {
 				dial = append(dial, c)
 			}

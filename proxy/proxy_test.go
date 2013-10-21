@@ -8,13 +8,7 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
-	"time"
 )
-
-func init() {
-	// WTF: without this line, the tests deadlock. Why?
-	time.AfterFunc(time.Hour, func() {})
-}
 
 const serverPath = "code.google.com/p/whispering-gophers/proxy/server"
 
