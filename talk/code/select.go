@@ -8,7 +8,7 @@ func main() {
 
 	select {
 	case ch <- 42:
-		fmt.Println("Send succeded")
+		fmt.Println("Send succeeded")
 	default:
 		fmt.Println("Send failed")
 	}

@@ -296,7 +296,7 @@ Add an `Addr` field to the `Message` type:
 
 Now, when constructing `Message` values, populate the `Addr` field with the listen address:
 
-	{"Addr":"192.168.1.200:23542,"Body":"This is a message!"} 
+	{"Addr":"192.168.1.200:23542","Body":"This is a message!"} 
 
 
 * Obtaining the listener address (1/2)
