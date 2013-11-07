@@ -179,7 +179,7 @@ Extend your program:
 
 - take an address string from the command line
 - make a TCP connection to the remote host
-- write the JSON-encoded messages to the connnection instead of standard output
+- write the JSON-encoded messages to the connection instead of standard output
 
 .image talk/img/diag-part2.png
 
@@ -210,7 +210,7 @@ Extend your program:
 
 - take an address string from the command line
 - make a TCP connection to the remote host
-- write the JSON-encoded messages to the connnection instead of standard output
+- write the JSON-encoded messages to the connection instead of standard output
 
 .image talk/img/diag-part2.png
 
