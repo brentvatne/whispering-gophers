@@ -186,7 +186,7 @@ var seenIDs = struct {
 }{m: make(map[string]bool)}
 
 func Seen(id string) bool {
-	if !*dedup {
+	if !*dedup || id == "" {
 		return false
 	}
 	seenIDs.Lock()
