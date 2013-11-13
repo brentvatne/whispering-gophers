@@ -1,14 +1,11 @@
 // Solution to part 8 of the Whispering Gophers code lab.
 //
-// This program extends part 8.
+// This program extends part 7.
 //
 // It connects to the peer specified by -peer.
 // It accepts connections from peers and receives messages from them.
-// When it sees a peer with an address it hasn't seen before, it makes a
+// When it sees a peer with an address it hasn't seen before, it opens a
 // connection to that peer.
-// It adds an ID field containing a random string to each outgoing message.
-// When it recevies a message with an ID it hasn't seen before, it broadcasts
-// that message to all connected peers.
 //
 package main
 
@@ -31,7 +28,6 @@ var (
 )
 
 type Message struct {
-	ID   string
 	Addr string
 	Body string
 }
@@ -116,12 +112,8 @@ func serve(c net.Conn) {
 			log.Println(err)
 			return
 		}
-		if Seen(m.ID) {
-			continue
-		}
-		fmt.Printf("%#v\n", m)
-		broadcast(m)
 		go dial(m.Addr)
+		fmt.Printf("%#v\n", m)
 	}
 }
 
@@ -129,11 +121,9 @@ func readInput() {
 	s := bufio.NewScanner(os.Stdin)
 	for s.Scan() {
 		m := Message{
-			ID:   util.RandomID(),
 			Addr: self,
 			Body: s.Text(),
 		}
-		Seen(m.ID)
 		broadcast(m)
 	}
 	if err := s.Err(); err != nil {
@@ -167,19 +157,4 @@ func dial(addr string) {
 			return
 		}
 	}
-}
-
-var seenIDs = struct {
-	m map[string]bool
-	sync.Mutex
-}{m: make(map[string]bool)}
-
-// Seen returns true if the specified id has been seen before.
-// If not, it returns false and marks the given id as "seen".
-func Seen(id string) bool {
-	seenIDs.Lock()
-	ok := seenIDs.m[id]
-	seenIDs.m[id] = true
-	seenIDs.Unlock()
-	return ok
 }

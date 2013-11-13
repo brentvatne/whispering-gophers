@@ -1,14 +1,11 @@
-// Solution to part 8 of the Whispering Gophers code lab.
+// Skeleton to part 8 of the Whispering Gophers code lab.
 //
-// This program extends part 8.
+// This program extends part 7.
 //
 // It connects to the peer specified by -peer.
 // It accepts connections from peers and receives messages from them.
-// When it sees a peer with an address it hasn't seen before, it makes a
+// When it sees a peer with an address it hasn't seen before, it opens a
 // connection to that peer.
-// It adds an ID field containing a random string to each outgoing message.
-// When it recevies a message with an ID it hasn't seen before, it broadcasts
-// that message to all connected peers.
 //
 package main
 
@@ -31,7 +28,6 @@ var (
 )
 
 type Message struct {
-	ID   string
 	Addr string
 	Body string
 }
@@ -58,7 +54,7 @@ func main() {
 	}
 }
 
-var peers = &Peers{m: make(map[string]chan<- Message)}
+// TODO: create a global shared Peers instance
 
 type Peers struct {
 	m  map[string]chan<- Message
@@ -97,12 +93,9 @@ func (p *Peers) List() []chan<- Message {
 }
 
 func broadcast(m Message) {
-	for _, ch := range peers.List() {
-		select {
-		case ch <- m:
-		default:
-			// Okay to drop messages sometimes.
-		}
+	for /* TODO: Range over the list of peers */ {
+		// TODO: Send a message to the channel, but don't block.
+		// Hint: Select is your friend.
 	}
 }
 
@@ -117,11 +110,9 @@ func serve(c net.Conn) {
 			return
 		}
 
-		// TODO: If this message has seen before, ignore it.
+		// TODO: Launch dial in a new goroutine, to connect to the address in the message's Addr field.
 
 		fmt.Printf("%#v\n", m)
-		broadcast(m)
-		go dial(m.Addr)
 	}
 }
 
@@ -129,11 +120,9 @@ func readInput() {
 	s := bufio.NewScanner(os.Stdin)
 	for s.Scan() {
 		m := Message{
-			ID:   util.RandomID(),
 			Addr: self,
 			Body: s.Text(),
 		}
-		// TODO: Mark the message ID as seen.
 		broadcast(m)
 	}
 	if err := s.Err(); err != nil {
@@ -142,15 +131,12 @@ func readInput() {
 }
 
 func dial(addr string) {
-	if addr == self {
-		return // Don't try to dial self.
-	}
+	// TODO: If dialing self, return.
 
-	ch := peers.Add(addr)
-	if ch == nil {
-		return // Peer already connected.
-	}
-	defer peers.Remove(addr)
+	// TODO: Add the address to the peers map.
+	// TODO: If you get a nil channel the peer is already connected, return.
+	// TODO: Remove the address from peers map when this function returns
+	//       (use defer).
 
 	c, err := net.Dial("tcp", addr)
 	if err != nil {
@@ -167,14 +153,4 @@ func dial(addr string) {
 			return
 		}
 	}
-}
-
-// TODO: Create a new map of seen message IDs and a mutex to protect it.
-
-// Seen returns true if the specified id has been seen before.
-// If not, it returns false and marks the given id as "seen".
-func Seen(id string) bool {
-	// TODO: Get a write lock on the seen message IDs map and unlock it at before returning.
-	// TODO: Check if the id has been seen before and return that later.
-	// TODO: Mark the ID as seen in the map.
 }

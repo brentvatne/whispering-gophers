@@ -344,12 +344,10 @@ Goroutines communicate via channels. A channel is a typed conduit that may be sy
 - Pass messages from one function to another using a channel.
 
 
-* Part 7: connect to multiple peers
+* Part 7: tracking peer connections
 
-- As we see new peer addresses, make connections those peers.
-- For each line read from standard input, broadcast that message to all connected peers.
-
-.image talk/img/diag-part7.png
+- Implement the `Peers` type as per the skeleton code.
+- Use `go test` to run the test suite against your implementation.
 
 
 * Sharing state
@@ -372,6 +370,7 @@ A central peer registry associates each peer address with its corresponding `cha
 		mu sync.RWMutex
 	}
 
+
 * Tracking peer connections (2/2)
 
 Before making a peer connection, ask the peer registry for a channel for this address:
@@ -391,6 +390,21 @@ To broadcast a `Message` to all peers, ask the peer registry for its list of `ch
 	func (p *Peers) List() []chan<- Message
 
 
+* Part 7: tracking peer connections (recap)
+
+- Implement the `Peers` type as per the skeleton code.
+- Use `go test` to run the test suite against your implementation.
+
+
+* Part 8: connect to multiple peers
+
+- Initialze a `Peers` value and store it in a global variable.
+- As we see new peer addresses, open connections to those peers.
+- For each line read from standard input, broadcast that message to all connected peers.
+
+.image talk/img/diag-part7.png
+
+
 * Sending without blocking
 
 If a peer connection stalls or dies, we don't want to hold up the rest of our program. To avoid this problem we should do a non-blocking send to each peer when broadcasting messages. This means some messages may be dropped, but in our mesh network this is okay.
@@ -398,20 +412,22 @@ If a peer connection stalls or dies, we don't want to hold up the rest of our pr
 .play talk/code/select.go /START/,/END/
 
 
-* Part 7: connect to multiple peers (recap)
+* Part 8: connect to multiple peers (recap)
 
-- As we see new peer addresses, make connections to those peers.
+- Initialze a `Peers` value and store it in a global variable.
+- As we see new peer addresses, open connections to those peers.
 - For each line read from standard input, broadcast that message to all connected peers.
 
 .image talk/img/diag-part7.png
 
 
-* Part 8: re-broadcast messages
+* Part 9: re-broadcast messages
 
 - Add `ID` field to `Message`,
 - When creating a `Message`, populate the `ID` field with a random string,
 - Track the `ID` of each received message; drop duplicates,
 - For each received `Message`, broadcast it to all connected peers.
+
 
 * Add ID to Message
 
@@ -458,7 +474,7 @@ You should implement a function named `Seen` — make sure it is thread safe!
 	func Seen(id string) bool
 
 
-* Part 8: re-broadcast messages (recap)
+* Part 9: re-broadcast messages (recap)
 
 - Add `ID` field to `Message`
 - When a `Message`, populate the `ID` field with a random string

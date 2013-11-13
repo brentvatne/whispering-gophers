@@ -1,11 +1,11 @@
-// Solution to part 7 of the Whispering Gophers code lab.
+// Skeleton to part 7 of the Whispering Gophers code lab.
 //
-// This program extends part 5.
+// This program extends part 6 by adding a Peers type.
+// The rest of the code is left as-is, so functionally there is no change.
 //
-// It connects to the peer specified by -peer.
-// It accepts connections from peers and receives messages from them.
-// When it sees a peer with an address it hasn't seen before, it opens a
-// connection to that peer.
+// However we have added a peers_test.go file, so that running
+//   go test
+// from the package directory will test your implementation of the Peers type.
 //
 package main
 
@@ -54,8 +54,6 @@ func main() {
 	}
 }
 
-var peers = &Peers{m: make(map[string]chan<- Message)}
-
 type Peers struct {
 	m  map[string]chan<- Message
 	mu sync.RWMutex
@@ -91,13 +89,6 @@ func (p *Peers) List() []chan<- Message {
 	// TODO: Return the slice.
 }
 
-func broadcast(m Message) {
-	for /* TODO: Range over the list of peers */ {
-		// TODO: Send a message to the channel, but don't block.
-		// Hint: Select is your friend.
-	}
-}
-
 func serve(c net.Conn) {
 	defer c.Close()
 	d := json.NewDecoder(c)
@@ -108,12 +99,11 @@ func serve(c net.Conn) {
 			log.Println(err)
 			return
 		}
-
-		// TODO: Launch dial in a new goroutine, to connect to the address in the message's Addr field.
-
 		fmt.Printf("%#v\n", m)
 	}
 }
+
+var peer = make(chan Message)
 
 func readInput() {
 	s := bufio.NewScanner(os.Stdin)
@@ -122,7 +112,7 @@ func readInput() {
 			Addr: self,
 			Body: s.Text(),
 		}
-		broadcast(m)
+		peer <- m
 	}
 	if err := s.Err(); err != nil {
 		log.Fatal(err)
@@ -130,12 +120,6 @@ func readInput() {
 }
 
 func dial(addr string) {
-	// TODO: Don't try to dial self.
-
-	// TODO: Add the address to the peers map.
-	// TODO: If you get a nil channel, the peer is already connected, return.
-	// TODO: Otherwise, remove the address from peers using defer.
-
 	c, err := net.Dial("tcp", addr)
 	if err != nil {
 		log.Println(addr, err)
@@ -144,7 +128,8 @@ func dial(addr string) {
 	defer c.Close()
 
 	e := json.NewEncoder(c)
-	for m := range ch {
+
+	for m := range peer {
 		err := e.Encode(m)
 		if err != nil {
 			log.Println(addr, err)
