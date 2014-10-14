@@ -31,7 +31,7 @@ var (
 )
 
 type Message struct {
-	ID   string
+	// TODO: add ID field
 	Addr string
 	Body string
 }
@@ -129,7 +129,7 @@ func readInput() {
 	s := bufio.NewScanner(os.Stdin)
 	for s.Scan() {
 		m := Message{
-			ID:   util.RandomID(),
+			// TODO: use util.RandomID to populate the ID field.
 			Addr: self,
 			Body: s.Text(),
 		}
